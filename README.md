@@ -5,27 +5,27 @@ URLにストレッチの手順を埋め込んで共有できる、モバイル�
 ## Requirements
 
 - Node.js 22以降
-- npm 10以降
+- pnpm 10以降
 - 音声時間を検査する場合は `ffprobe`
 
 ## Development
 
 ```sh
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 品質チェック:
 
 ```sh
-npm run format:check
-npm run lint
-npm run typecheck
-npm test
-npm run build
+pnpm format:check
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
 ```
 
-ブラウザテストは初回のみ `npx playwright install` でブラウザを導入してから `npm run test:e2e` を実行します。
+ブラウザテストは初回のみ `pnpm exec playwright install` でブラウザを導入してから `pnpm test:e2e` を実行します。
 
 ## Routine URL
 
@@ -39,4 +39,4 @@ npm run build
 
 ## Deployment
 
-`npm run build` の成果物は `dist/` に生成されます。`wrangler.jsonc` は Cloudflare Workers Static Assets 用で、WorkerコードやAPIは含みません。
+`pnpm build` の成果物は `dist/` に生成されます。`wrangler.jsonc` は Cloudflare Workers Static Assets 用で、WorkerコードやAPIは含みません。

@@ -1,5 +1,5 @@
 dist
 coverage
 playwright-report
-package-lock.json
+pnpm-lock.yaml
 design-doc.md
