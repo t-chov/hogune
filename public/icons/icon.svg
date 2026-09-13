@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Hogune">
+  <rect width="512" height="512" rx="112" fill="#155e52"/>
+  <circle cx="256" cy="256" r="154" fill="#f6f1e7"/>
+  <path d="M166 302c43-8 76-41 88-92 8 51 43 85 92 92" fill="none" stroke="#d77852" stroke-linecap="round" stroke-width="42"/>
+  <circle cx="256" cy="174" r="34" fill="#18312d"/>
+</svg>

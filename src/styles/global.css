@@ -1,0 +1,122 @@
+:root {
+  color: #18312d;
+  background: #f6f1e7;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Hiragino Sans',
+    'Yu Gothic',
+    sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+button,
+summary {
+  min-height: 48px;
+  font: inherit;
+}
+button {
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  border: 0;
+  border-radius: 999px;
+  color: white;
+  background: #155e52;
+  font-weight: 700;
+}
+button:disabled {
+  opacity: 0.5;
+}
+code {
+  display: block;
+  overflow-wrap: anywhere;
+  padding: 0.8rem;
+  border-radius: 0.75rem;
+  background: #e7ede8;
+}
+
+.shell {
+  width: min(100% - 2rem, 36rem);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: max(1.5rem, env(safe-area-inset-top)) 0
+    max(1.5rem, env(safe-area-inset-bottom));
+  display: grid;
+  align-content: start;
+  gap: 2rem;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.brand__mark {
+  display: grid;
+  width: 3.5rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 1rem;
+  color: white;
+  background: #155e52;
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+.brand h1,
+.brand p {
+  margin: 0;
+}
+.brand h1 {
+  font-size: clamp(2rem, 10vw, 3.25rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+.eyebrow,
+.status {
+  color: #7d4930;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.card {
+  padding: clamp(1.25rem, 5vw, 2rem);
+  border: 1px solid #d9d1c2;
+  border-radius: 1.5rem;
+  background: #fffdf8;
+  box-shadow: 0 1rem 3rem rgb(38 68 60 / 8%);
+}
+.card h2 {
+  margin-top: 0.35rem;
+  font-size: clamp(1.55rem, 7vw, 2.25rem);
+  line-height: 1.2;
+}
+.card--error {
+  border-color: #b66a50;
+}
+footer {
+  color: #50645f;
+  font-size: 0.9rem;
+}
+summary {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+  }
+}
