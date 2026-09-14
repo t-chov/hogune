@@ -1,6 +1,6 @@
 {
   "id": "00D",
-  "status": "draft-awaiting-human-generation-and-review",
+  "status": "reviewed",
   "nameJa": "股関節の前のストレッチ、右",
   "instructionJa": "右ひざを折りたたんだタオルの上につき、左足を前に置きます。左手を左ももに、右手を右腰に添えます。上体を起こし、お腹に軽く力を入れ、腰を反らさずに体重を少し前へ移します。右脚の付け根の前が軽く伸びる位置で止めます。痛みがあれば中止し、反動をつけず、楽に呼吸を続けます。",
   "voiceTextJa": "次は、股関節の前のストレッチ、右。右ひざを折りたたんだタオルの上につき、左足を前に置きます。左手を左ももに、右手を右腰に添えます。上体を起こし、お腹に軽く力を入れ、腰を反らさずに体重を少し前へ移します。右脚の付け根の前が軽く伸びる位置で止めます。痛みがあれば中止し、反動をつけず、楽に呼吸を続けます。",
@@ -15,21 +15,22 @@
     "style": null,
     "generatedAt": null,
     "normalizationSettings": null,
-    "measuredDurationMs": null,
+    "measuredDurationMs": 25728,
     "outputPath": "public/exercises/00D/voice.mp3",
     "termsLinks": [
       "https://voicevox.hiroshiba.jp/term/",
       "https://www.zunko.jp/con_ongen_kiyaku.html"
-    ]
+    ],
+    "generationNotes": "音声はユーザーが生成。バージョン・スタイル・生成日・音量調整設定は未申告。"
   },
   "instructionReview": {
-    "reviewed": false,
-    "reviewer": null,
-    "reviewedAt": null
+    "reviewed": true,
+    "reviewer": "repository owner (confirmed in conversation)",
+    "reviewedAt": "2026-09-14"
   },
   "audioReview": {
-    "reviewed": false,
-    "reviewer": null,
-    "reviewedAt": null
+    "reviewed": true,
+    "reviewer": "repository owner (confirmed in conversation)",
+    "reviewedAt": "2026-09-14"
   }
 }

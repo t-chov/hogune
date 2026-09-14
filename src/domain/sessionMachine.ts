@@ -36,7 +36,7 @@ export function reduceSession(
   if (state.status === 'exercising' && event.type === 'PHASE_FINISHED') {
     if (state.exerciseIndex + 1 >= event.exerciseCount)
       return { status: 'complete' };
-    // Even a zero-second rest includes the next instructions and countdown.
+    // A zero-second interval transitions immediately; speech may follow the start.
     return { status: 'interval', exerciseIndex: state.exerciseIndex };
   }
   if (state.status === 'interval' && event.type === 'PHASE_FINISHED') {

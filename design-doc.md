@@ -48,7 +48,7 @@ The first release does not include:
 - A routine contains 1–100 exercises.
 - One exercise may appear multiple times in a routine.
 - Exercise duration is common to every exercise in a routine.
-- The configured interval is a common minimum rest duration. Each transition may extend it to fit the full spoken instructions and a three-second countdown.
+- The configured interval is an exact rest duration. Instructions may overlap the next exercise and its countdown.
 - Exercise content is manually reviewed before release.
 
 ## 5. Recommended technology stack
@@ -105,7 +105,7 @@ Interpretation:
 
 - Format version: `v1`
 - Exercise duration: 30 seconds
-- Minimum interval duration: 5 seconds (extended when required for spoken instructions and countdown)
+- Interval duration: 5 seconds (fixed, independent of speech duration)
 - Exercises: `00A`, `00B`, `00C`
 
 The hash fragment is used so routine data is not sent as part of the HTTP request and static hosting requires no route fallback.
@@ -260,21 +260,23 @@ For each exercise:
 6. During the final three seconds before the next exercise, play the start countdown.
 7. At zero, play the start cue and enter the next exercise.
 
-Every instruction must finish at least 250 ms before the three-second start countdown. Never omit instructions or play them during the preceding exercise. Use the measured `voiceDurationMs` to calculate all times.
+Only the first instruction must finish at least 250 ms before its three-second start countdown. Later instructions begin 500 ms after the preceding exercise ends and may continue across the next countdown and exercise start.
 
 - Initial preparation: `voiceDurationMs + 250 + 3000` ms.
-- Actual transition: `max(intervalSeconds * 1000, 500 + nextVoiceDurationMs + 250 + 3000)` ms.
-- A zero-second interval still includes instructions and a countdown; it means no additional rest.
+- Every transition: exactly `intervalSeconds * 1000` ms.
+- Rest shorter than three seconds only includes the countdown ticks that fit; zero rest starts the next hold immediately without start-countdown ticks.
+- Events are sorted by time, including instructions scheduled after a zero-rest start. Announcements do not change an already-active hold back to interval state.
 - Exercise hold durations remain exactly as encoded in the URL.
-- The Ready screen derives total duration from the same schedule, including preparation and extended intervals.
+- The Ready screen includes initial preparation, holds and exact intervals in its estimate.
+- An instruction continues through exercise start; it is stopped if superseded by another instruction or at session completion. At a zero-rest boundary the start cue replaces the end cue.
 
-The v1 URL syntax, valid ranges, and IDs remain unchanged. This revision intentionally changes short/zero interval timing to prioritize complete audible instructions; the Ready screen explains that interval values are minimums.
+The v1 URL syntax, valid ranges, and IDs remain unchanged.
 
 ### 9.6 Pause, resume, and quit
 
 - A large Pause control must be available during the session.
 - Pausing freezes the routine timeline and cancels unsounded scheduled audio.
-- Resuming begins with a new three-second countdown before continuing the remaining phase. If paused during speech, replay that instruction from the beginning, then leave 250 ms before the resume countdown; never resume halfway through an instruction.
+- Resuming begins with a new three-second countdown before continuing the remaining phase. If paused during speech, replay that instruction from the beginning. Initial preparation retains the speech gap and countdown. During holds and subsequent intervals, replay may overlap the countdown and resumed hold; speech length does not extend the interval.
 - “End session” requires a lightweight confirmation to prevent accidental taps.
 - Browser reload restarts at Ready in v1; mid-session persistence is not required.
 
@@ -511,7 +513,7 @@ Cover at minimum:
 - Exercise durations of 5 and 600 seconds.
 - Pause/resume without time loss or duplicate audio.
 - Complete instructions before every exercise, including zero/short intervals and long speech.
-- No speech/cue overlap, initial preparation duration, extended intervals, and a single completion cue.
+- Initial preparation duration, exact intervals despite overlapping speech, short-rest countdowns, resume with overlapping speech, and a single completion cue.
 - Completion reached exactly once.
 - Corrupted local-storage fallback.
 
@@ -601,7 +603,7 @@ Adding an exercise should require only:
 
 ## 24. Implementation phases
 
-Current implementation (2026-09-14): Phase 1 domain prototype, updated for audio-led instructions, plus an oscillator-based sound-check UI. All three reserved exercises remain disabled. Production VOICEVOX files, session playback controls, and physical-device audio verification are still pending; the sound check does not imply these are complete.
+Current implementation (2026-09-14): Audio-led session playback is implemented for five user-generated and user-reviewed VOICEVOX clips (00D–011). Playback includes preload/decode after Start, audio-clock scheduling, pause/resume with interrupted-speech replay, mute, quit confirmation, completion/restart, automatic visibility pause, and optional screen wake lock. The original three reserved placeholders remain disabled. Physical-device audio verification is still pending. VOICEVOX version/style and generation settings remain unreported in metadata. The Ready estimate uses ffprobe measurements; playback uses decoded sample durations for initial preparation and interrupted-speech detection. Subsequent intervals are exact and allow overlapping speech.
 
 ### Phase 1: Domain prototype
 
@@ -640,7 +642,7 @@ The release is complete when all of the following are true:
 3. A user can start the routine with one tap after assets are ready.
 4. No exercise image or thumbnail is generated, loaded, cached, or displayed. Every exercise displays its Japanese name, written instructions, remaining time, and position in the routine.
 5. Start and end countdowns are audible and visually distinct.
-6. Every exercise receives complete pre-generated 四国めたん instructions before its start countdown. Short/zero intervals extend as needed; speech and critical cues never overlap.
+6. The initial 四国めたん instructions finish before the first countdown. Subsequent intervals stay fixed, with instructions allowed to continue into the next hold.
 7. Pause/resume does not lose time, skip a phase, or duplicate audio.
 8. Hiding the page pauses the session; returning offers Resume.
 9. The current routine works offline after its assets have been cached.

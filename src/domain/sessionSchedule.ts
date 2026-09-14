@@ -13,7 +13,7 @@ const SPEECH_GAP_MS = 250;
 // Transition cues last at most 400 ms; leave silence before instructions.
 const TRANSITION_GAP_MS = 500;
 
-/** Intervals are minimums: every exercise gets its full spoken instructions. */
+/** Intervals are exact; transition speech may continue into the next hold. */
 export function buildSessionSchedule(
   routine: Routine,
   resolvedExercises: readonly Exercise[],
@@ -37,12 +37,13 @@ export function buildSessionSchedule(
     }
     const announcementMs =
       previousEndMs + (index === 0 ? 0 : TRANSITION_GAP_MS);
-    const earliestStartMs =
-      announcementMs + exercise.voiceDurationMs + SPEECH_GAP_MS + COUNTDOWN_MS;
-    const startMs = Math.max(
-      earliestStartMs,
-      previousEndMs + (index === 0 ? 0 : routine.intervalSeconds * 1_000),
-    );
+    const startMs =
+      index === 0
+        ? announcementMs +
+          exercise.voiceDurationMs +
+          SPEECH_GAP_MS +
+          COUNTDOWN_MS
+        : previousEndMs + routine.intervalSeconds * 1_000;
     events.push({
       id: `announce-${index}`,
       atMs: announcementMs,
@@ -50,6 +51,7 @@ export function buildSessionSchedule(
       exerciseIndex: index,
     });
     for (const second of [3, 2, 1]) {
+      if (index > 0 && startMs - second * 1000 < previousEndMs) continue;
       events.push({
         id: `start-countdown-${index}-${second}`,
         atMs: startMs - second * 1_000,
@@ -82,5 +84,5 @@ export function buildSessionSchedule(
     });
     previousEndMs = endMs;
   });
-  return events;
+  return events.sort((a, b) => a.atMs - b.atMs);
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { exercises } from '../data/exercises';
 import { decodeRoutineHash } from '../domain/routineCodec';
-import { buildSessionSchedule } from '../domain/sessionSchedule';
+import { Session } from '../components/Session';
 import { AudioCuePreview } from '../components/AudioCuePreview';
 
 export function App() {
@@ -36,44 +36,24 @@ export function App() {
 
       {!result ? (
         <section className="card" aria-labelledby="welcome-title">
-          <p className="status">準備中</p>
+          <p className="status">ストレッチを始める</p>
           <h2 id="welcome-title">ルーティンURLを開いて始めます</h2>
           <p>
             画像は表示せず、種目と動作の音声案内、カウントダウン音で進めるストレッチです。
           </p>
           <p>
-            現在はプロトタイプです。音声案内の素材とセッション再生機能は準備中です。カウントダウン音は下のボタンで確認できます。
+            股関節・もも裏・広背筋の5種目を、音声案内に合わせて行えます。カウントダウン音は下のボタンで確認できます。
           </p>
-          <code>#/v1/30/5/00A00B00C</code>
+          <a className="routine-link" href="#/v1/30/10/00D00E00F010011">
+            股関節・もも裏・広背筋のメニューを開く
+          </a>
         </section>
       ) : result.ok ? (
-        <section className="card" aria-labelledby="ready-title">
-          <p className="status">準備完了</p>
-          <h2 id="ready-title">{result.exercises.length}種目のストレッチ</h2>
-          <p>
-            1種目 {result.routine.exerciseSeconds}秒・休憩 最低{' '}
-            {result.routine.intervalSeconds}秒
-          </p>
-          <p>
-            案内・カウントダウン込みの所要時間：約{' '}
-            {Math.ceil(
-              (buildSessionSchedule(result.routine, result.exercises).at(-1)
-                ?.atMs ?? 0) / 1000,
-            )}
-            秒。 休憩が短い場合も、音声案内を最後まで聞いてから始めます。
-          </p>
-          <ol>
-            {result.exercises.map((exercise, index) => (
-              <li key={`${exercise.id}-${index}`}>
-                {exercise.nameJa}
-                <p>{exercise.instructionJa}</p>
-              </li>
-            ))}
-          </ol>
-          <button type="button" disabled>
-            スタート（Phase 2で実装）
-          </button>
-        </section>
+        <Session
+          key={hash}
+          routine={result.routine}
+          exercises={result.exercises}
+        />
       ) : (
         <section
           className="card card--error"
@@ -86,7 +66,7 @@ export function App() {
         </section>
       )}
 
-      <AudioCuePreview />
+      {!result?.ok && <AudioCuePreview />}
 
       <footer>
         <details>

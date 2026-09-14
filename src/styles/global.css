@@ -120,3 +120,53 @@ summary {
     animation-duration: 0.01ms !important;
   }
 }
+
+.session button + button,
+.session [role='group'] {
+  margin-top: 0.75rem;
+}
+.secondary {
+  background: #e7ede8;
+  color: #18312d;
+}
+.timer {
+  font-size: clamp(4rem, 20vw, 7rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  line-height: 1.2;
+}
+.timer span {
+  font-size: 1.25rem;
+  margin-left: 0.5rem;
+}
+.timer--waiting {
+  color: #768b84;
+}
+.timer .timer__label {
+  display: block;
+  margin: 0 0 0.5rem;
+  color: #50645f;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.hint {
+  color: #50645f;
+  font-size: 0.9rem;
+}
+.routine-link {
+  display: block;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #155e52;
+  color: white;
+  text-align: center;
+}
+button,
+a {
+  touch-action: manipulation;
+}
+:focus-visible {
+  outline: 3px solid #b75b16;
+  outline-offset: 3px;
+}

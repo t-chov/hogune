@@ -24,19 +24,21 @@ const placeholder = (
   id: string,
   nameJa: string,
   instructionJa: string,
+  voiceDurationMs = 0,
 ): Exercise => ({
   id,
   nameJa,
   instructionJa,
   voiceTextJa: `次は、${nameJa}。${instructionJa}`,
   voiceSrc: `/exercises/${id}/voice.mp3`,
-  voiceDurationMs: 0,
-  enabled: false,
+  voiceDurationMs,
+  enabled: voiceDurationMs > 0,
   review: {
-    instructionReviewed: false,
-    audioReviewed: false,
-    reviewedAt: '',
-    reviewer: '',
+    instructionReviewed: voiceDurationMs > 0,
+    audioReviewed: voiceDurationMs > 0,
+    reviewedAt: voiceDurationMs > 0 ? '2026-09-14' : '',
+    reviewer:
+      voiceDurationMs > 0 ? 'repository owner (confirmed in conversation)' : '',
   },
   provenance: {
     voiceGenerator: 'VOICEVOX',
@@ -53,25 +55,30 @@ export const exercises = [
     '00D',
     '股関節の前のストレッチ、右',
     '右ひざを折りたたんだタオルの上につき、左足を前に置きます。左手を左ももに、右手を右腰に添えます。上体を起こし、お腹に軽く力を入れ、腰を反らさずに体重を少し前へ移します。右脚の付け根の前が軽く伸びる位置で止めます。痛みがあれば中止し、反動をつけず、楽に呼吸を続けます。',
+    25728,
   ),
   placeholder(
     '00E',
     '股関節の前のストレッチ、左',
     '左ひざを折りたたんだタオルの上につき、右足を前に置きます。右手を右ももに、左手を左腰に添えます。上体を起こし、お腹に軽く力を入れ、腰を反らさずに体重を少し前へ移します。左脚の付け根の前が軽く伸びる位置で止めます。痛みがあれば中止し、反動をつけず、楽に呼吸を続けます。',
+    25824,
   ),
   placeholder(
     '00F',
     'もも裏のストレッチ、右',
     'あおむけになり、両ひざを曲げ、足裏を床につけます。右脚を持ち上げ、両手で右ももの裏を支えます。左足は床に置いたまま、右ひざをゆっくり伸ばし、もも裏が軽く伸びる位置で止めます。ひざは曲がっていてもかまいません。ひざの関節を手で引っ張らず、痛みがあれば中止し、楽に呼吸を続けます。',
+    24629,
   ),
   placeholder(
     '010',
     'もも裏のストレッチ、左',
     'あおむけになり、両ひざを曲げ、足裏を床につけます。左脚を持ち上げ、両手で左ももの裏を支えます。右足は床に置いたまま、左ひざをゆっくり伸ばし、もも裏が軽く伸びる位置で止めます。ひざは曲がっていてもかまいません。ひざの関節を手で引っ張らず、痛みがあれば中止し、楽に呼吸を続けます。',
+    24779,
   ),
   placeholder(
     '011',
     '広背筋のストレッチ',
     '四つばいになり、足の甲を床につけ、両ひざを少し開きます。両手を前の床に置いたまま、お尻をゆっくりかかとへ近づけます。腕と背中を長く伸ばし、わきの下から背中の横が軽く伸びる位置で止めます。お尻をかかとへ、額を床へ無理に押しつけず、腰を反らさないようにします。痛みがあれば中止し、楽に呼吸を続けます。',
+    25824,
   ),
 ] satisfies readonly Exercise[];

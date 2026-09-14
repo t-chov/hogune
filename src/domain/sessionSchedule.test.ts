@@ -48,40 +48,27 @@ describe('audio-first session schedule', () => {
     },
   );
 
-  it.each([0, 1, 3, 5, 120])(
-    'never skips or overlaps instructions with a %d-second requested rest',
+  it.each([0, 1, 3, 5, 10, 120])(
+    'preserves an exact %d-second rest even with long speech',
     (interval) => {
-      const exercises = [exercise('00A', 8_000), exercise('00B', 12_000)];
-      const events = buildSessionSchedule(routine(5, interval), exercises);
-      expect(events.filter((event) => event.type === 'announce')).toHaveLength(
-        2,
-      );
-      for (const [index, item] of exercises.entries()) {
-        const announce = events.find(
-          (event) => event.id === `announce-${index}`,
-        );
-        if (!announce) throw new Error('Missing instruction');
-        const ticks = events.filter((event) =>
-          event.id.startsWith(`start-countdown-${index}-`),
-        );
-        expect(ticks).toHaveLength(3);
-        expect(ticks[0]?.atMs).toBeGreaterThanOrEqual(
-          announce.atMs + item.voiceDurationMs + 250,
-        );
-        const overlappingCues = events.filter(
-          (event) =>
-            event.type !== 'announce' &&
-            event.atMs >= announce.atMs &&
-            event.atMs < announce.atMs + item.voiceDurationMs,
-        );
-        expect(overlappingCues).toEqual([]);
-      }
+      const events = buildSessionSchedule(routine(30, interval), [
+        exercise('00A', 8000),
+        exercise('00B', 25000),
+      ]);
       const end = events.find((event) => event.id === 'end-0');
       const announce = events.find((event) => event.id === 'announce-1');
       const start = events.find((event) => event.id === 'start-1');
       if (!end || !announce || !start) throw new Error('Missing transition');
       expect(announce.atMs).toBe(end.atMs + 500);
-      expect(start.atMs - end.atMs).toBe(Math.max(interval * 1_000, 15_750));
+      expect(start.atMs - end.atMs).toBe(interval * 1000);
+      if (interval < 25)
+        expect(announce.atMs + 25000).toBeGreaterThan(start.atMs);
+      const ticks = events.filter((e) => e.id.startsWith('start-countdown-1-'));
+      expect(ticks).toHaveLength(Math.min(3, interval));
+      expect(ticks.every((e) => e.atMs >= end.atMs)).toBe(true);
+      expect(events.map((e) => e.atMs)).toEqual(
+        events.map((e) => e.atMs).sort((a, b) => a - b),
+      );
     },
   );
 

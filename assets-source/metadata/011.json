@@ -1,6 +1,6 @@
 {
   "id": "011",
-  "status": "draft-awaiting-human-generation-and-review",
+  "status": "reviewed",
   "nameJa": "広背筋のストレッチ",
   "instructionJa": "四つばいになり、足の甲を床につけ、両ひざを少し開きます。両手を前の床に置いたまま、お尻をゆっくりかかとへ近づけます。腕と背中を長く伸ばし、わきの下から背中の横が軽く伸びる位置で止めます。お尻をかかとへ、額を床へ無理に押しつけず、腰を反らさないようにします。痛みがあれば中止し、楽に呼吸を続けます。",
   "voiceTextJa": "次は、広背筋のストレッチ。四つばいになり、足の甲を床につけ、両ひざを少し開きます。両手を前の床に置いたまま、お尻をゆっくりかかとへ近づけます。腕と背中を長く伸ばし、わきの下から背中の横が軽く伸びる位置で止めます。お尻をかかとへ、額を床へ無理に押しつけず、腰を反らさないようにします。痛みがあれば中止し、楽に呼吸を続けます。",
@@ -16,21 +16,22 @@
     "style": null,
     "generatedAt": null,
     "normalizationSettings": null,
-    "measuredDurationMs": null,
+    "measuredDurationMs": 25824,
     "outputPath": "public/exercises/011/voice.mp3",
     "termsLinks": [
       "https://voicevox.hiroshiba.jp/term/",
       "https://www.zunko.jp/con_ongen_kiyaku.html"
-    ]
+    ],
+    "generationNotes": "音声はユーザーが生成。バージョン・スタイル・生成日・音量調整設定は未申告。"
   },
   "instructionReview": {
-    "reviewed": false,
-    "reviewer": null,
-    "reviewedAt": null
+    "reviewed": true,
+    "reviewer": "repository owner (confirmed in conversation)",
+    "reviewedAt": "2026-09-14"
   },
   "audioReview": {
-    "reviewed": false,
-    "reviewer": null,
-    "reviewedAt": null
+    "reviewed": true,
+    "reviewer": "repository owner (confirmed in conversation)",
+    "reviewedAt": "2026-09-14"
   }
 }

@@ -1,7 +1,13 @@
 export type Cue = 'countdown' | 'start' | 'end' | 'complete';
 
 /** All cues finish within 400 ms, before the scheduler's speech gap. */
-export function scheduleCue(context: AudioContext, cue: Cue, at: number): void {
+export function scheduleCue(
+  context: AudioContext,
+  cue: Cue,
+  at: number,
+  destination: AudioNode = context.destination,
+): () => void {
+  const active: { oscillator: OscillatorNode; gain: GainNode }[] = [];
   const notes: Record<Cue, number[]> = {
     countdown: [660],
     start: [660, 880],
@@ -18,7 +24,8 @@ export function scheduleCue(context: AudioContext, cue: Cue, at: number): void {
     gain.gain.linearRampToValueAtTime(0.15, start + 0.01);
     gain.gain.linearRampToValueAtTime(0, start + 0.11);
     oscillator.connect(gain);
-    gain.connect(context.destination);
+    gain.connect(destination);
+    active.push({ oscillator, gain });
     oscillator.onended = () => {
       oscillator.disconnect();
       gain.disconnect();
@@ -26,4 +33,16 @@ export function scheduleCue(context: AudioContext, cue: Cue, at: number): void {
     oscillator.start(start);
     oscillator.stop(start + 0.12);
   });
+  return () => {
+    active.forEach(({ oscillator, gain }) => {
+      oscillator.onended = null;
+      try {
+        oscillator.stop();
+      } catch {
+        /* Already ended. */
+      }
+      oscillator.disconnect();
+      gain.disconnect();
+    });
+  };
 }
