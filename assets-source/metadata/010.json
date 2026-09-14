@@ -1,0 +1,33 @@
+{
+  "id": "010",
+  "status": "draft-awaiting-human-generation-and-review",
+  "nameJa": "もも裏のストレッチ、左",
+  "instructionJa": "あおむけになり、両ひざを曲げ、足裏を床につけます。左脚を持ち上げ、両手で左ももの裏を支えます。右足は床に置いたまま、左ひざをゆっくり伸ばし、もも裏が軽く伸びる位置で止めます。ひざは曲がっていてもかまいません。ひざの関節を手で引っ張らず、痛みがあれば中止し、楽に呼吸を続けます。",
+  "voiceTextJa": "次は、もも裏のストレッチ、左。あおむけになり、両ひざを曲げ、足裏を床につけます。左脚を持ち上げ、両手で左ももの裏を支えます。右足は床に置いたまま、左ひざをゆっくり伸ばし、もも裏が軽く伸びる位置で止めます。ひざは曲がっていてもかまいません。ひざの関節を手で引っ張らず、痛みがあれば中止し、楽に呼吸を続けます。",
+  "sources": ["https://www.orthoinfo.org/recovery/knee-conditioning-program/"],
+  "sourcesAccessedAt": "2026-09-14",
+  "voice": {
+    "generator": "VOICEVOX",
+    "version": null,
+    "character": "四国めたん",
+    "style": null,
+    "generatedAt": null,
+    "normalizationSettings": null,
+    "measuredDurationMs": null,
+    "outputPath": "public/exercises/010/voice.mp3",
+    "termsLinks": [
+      "https://voicevox.hiroshiba.jp/term/",
+      "https://www.zunko.jp/con_ongen_kiyaku.html"
+    ]
+  },
+  "instructionReview": {
+    "reviewed": false,
+    "reviewer": null,
+    "reviewedAt": null
+  },
+  "audioReview": {
+    "reviewed": false,
+    "reviewer": null,
+    "reviewedAt": null
+  }
+}

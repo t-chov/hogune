@@ -1,0 +1,35 @@
+{
+  "id": "00E",
+  "status": "draft-awaiting-human-generation-and-review",
+  "nameJa": "股関節の前のストレッチ、左",
+  "instructionJa": "左ひざを折りたたんだタオルの上につき、右足を前に置きます。右手を右ももに、左手を左腰に添えます。上体を起こし、お腹に軽く力を入れ、腰を反らさずに体重を少し前へ移します。左脚の付け根の前が軽く伸びる位置で止めます。痛みがあれば中止し、反動をつけず、楽に呼吸を続けます。",
+  "voiceTextJa": "次は、股関節の前のストレッチ、左。左ひざを折りたたんだタオルの上につき、右足を前に置きます。右手を右ももに、左手を左腰に添えます。上体を起こし、お腹に軽く力を入れ、腰を反らさずに体重を少し前へ移します。左脚の付け根の前が軽く伸びる位置で止めます。痛みがあれば中止し、反動をつけず、楽に呼吸を続けます。",
+  "sources": [
+    "https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/stretching/art-20546848"
+  ],
+  "sourcesAccessedAt": "2026-09-14",
+  "voice": {
+    "generator": "VOICEVOX",
+    "version": null,
+    "character": "四国めたん",
+    "style": null,
+    "generatedAt": null,
+    "normalizationSettings": null,
+    "measuredDurationMs": null,
+    "outputPath": "public/exercises/00E/voice.mp3",
+    "termsLinks": [
+      "https://voicevox.hiroshiba.jp/term/",
+      "https://www.zunko.jp/con_ongen_kiyaku.html"
+    ]
+  },
+  "instructionReview": {
+    "reviewed": false,
+    "reviewer": null,
+    "reviewedAt": null
+  },
+  "audioReview": {
+    "reviewed": false,
+    "reviewer": null,
+    "reviewedAt": null
+  }
+}

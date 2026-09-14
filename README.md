@@ -39,6 +39,10 @@ pnpm build
 
 プレースホルダーの `00A`〜`00C` は予約済みですが、レビュー済み音声がないため無効です。公開するには動作の説明・読み上げ原稿・VOICEVOX音声・生成記録を追加し、`src/data/exercises.ts` に説明と音声のレビュー情報、実測音声時間を記録して有効化してください。画像の用意は不要です。
 
+## ストレッチメニューと音声原稿
+
+股関節前面・ハムストリングスの左右と広背筋の計5種目（`00D`〜`011`）を草案として登録しています。[メニュー・Web出典・VOICEVOX用コピー原稿](./assets-source/voicevox/README.md)を参照してください。リンク先の種目別TXTは全文をそのままVOICEVOXへコピーできます。音声生成は人間が行い、生成・レビュー完了までは無効です。
+
 ## Deployment
 
 `pnpm build` の成果物は `dist/` に生成されます。`wrangler.jsonc` は Cloudflare Workers Static Assets 用で、WorkerコードやAPIは含みません。
