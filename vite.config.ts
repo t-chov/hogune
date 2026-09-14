@@ -11,7 +11,7 @@ export default defineConfig({
       manifest: {
         name: 'Hogune（ホグネ）',
         short_name: 'Hogune',
-        description: 'URLで共有できるストレッチルーティン',
+        description: '音声案内とカウントダウン音で進めるストレッチルーティン',
         lang: 'ja',
         start_url: '/',
         scope: '/',
@@ -33,10 +33,12 @@ export default defineConfig({
         navigateFallback: '/index.html',
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.pathname.startsWith('/exercises/'),
+            urlPattern: ({ url }) =>
+              url.pathname.startsWith('/exercises/') &&
+              url.pathname.endsWith('.mp3'),
             handler: 'CacheFirst',
             options: {
-              cacheName: 'hogune-exercise-assets-v1',
+              cacheName: 'hogune-exercise-voices-v1',
               expiration: {
                 maxEntries: 200,
                 maxAgeSeconds: 60 * 60 * 24 * 365,

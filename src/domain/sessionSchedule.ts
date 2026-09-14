@@ -10,112 +10,77 @@ export type ScheduledEvent = {
 
 const COUNTDOWN_MS = 3_000;
 const SPEECH_GAP_MS = 250;
+// Transition cues last at most 400 ms; leave silence before instructions.
+const TRANSITION_GAP_MS = 500;
 
+/** Intervals are minimums: every exercise gets its full spoken instructions. */
 export function buildSessionSchedule(
   routine: Routine,
   resolvedExercises: readonly Exercise[],
 ): ScheduledEvent[] {
-  if (resolvedExercises.length !== routine.exerciseIds.length) {
+  if (
+    resolvedExercises.length === 0 ||
+    resolvedExercises.length !== routine.exerciseIds.length
+  ) {
     throw new Error('Resolved exercise count does not match the routine');
   }
 
-  const events: ScheduledEvent[] = [
-    { id: 'announce-0', atMs: 0, type: 'announce', exerciseIndex: 0 },
-    ...countdownEvents('prepare', 0, 0),
-    { id: 'start-0', atMs: COUNTDOWN_MS, type: 'start', exerciseIndex: 0 },
-  ];
-  let exerciseStartMs = COUNTDOWN_MS;
+  const events: ScheduledEvent[] = [];
+  let previousEndMs = 0;
 
-  for (let index = 0; index < resolvedExercises.length; index += 1) {
-    const exerciseEndMs = exerciseStartMs + routine.exerciseSeconds * 1_000;
-    for (let second = 3; second >= 1; second -= 1) {
-      const atMs = exerciseEndMs - second * 1_000;
-      if (atMs >= exerciseStartMs) {
-        events.push({
-          id: `end-countdown-${index}-${second}`,
-          atMs,
-          type: 'countdown',
-          exerciseIndex: index,
-        });
-      }
+  resolvedExercises.forEach((exercise, index) => {
+    if (
+      !Number.isFinite(exercise.voiceDurationMs) ||
+      exercise.voiceDurationMs <= 0
+    ) {
+      throw new Error('Voice duration must be a positive finite number');
     }
+    const announcementMs =
+      previousEndMs + (index === 0 ? 0 : TRANSITION_GAP_MS);
+    const earliestStartMs =
+      announcementMs + exercise.voiceDurationMs + SPEECH_GAP_MS + COUNTDOWN_MS;
+    const startMs = Math.max(
+      earliestStartMs,
+      previousEndMs + (index === 0 ? 0 : routine.intervalSeconds * 1_000),
+    );
     events.push({
-      id: `end-${index}`,
-      atMs: exerciseEndMs,
-      type: 'end',
+      id: `announce-${index}`,
+      atMs: announcementMs,
+      type: 'announce',
       exerciseIndex: index,
     });
-
-    const nextIndex = index + 1;
-    if (nextIndex >= resolvedExercises.length) {
+    for (const second of [3, 2, 1]) {
       events.push({
-        id: 'complete',
-        atMs: exerciseEndMs,
-        type: 'complete',
+        id: `start-countdown-${index}-${second}`,
+        atMs: startMs - second * 1_000,
+        type: 'countdown',
         exerciseIndex: index,
       });
-      break;
-    }
-
-    const nextStartMs = exerciseEndMs + routine.intervalSeconds * 1_000;
-    const countdownStartMs = nextStartMs - COUNTDOWN_MS;
-    const nextExercise = resolvedExercises[nextIndex];
-    if (!nextExercise) throw new Error('Missing resolved exercise');
-    const latestAnnouncementMs =
-      countdownStartMs - SPEECH_GAP_MS - nextExercise.voiceDurationMs;
-    const earliestSafeMs = exerciseStartMs;
-    if (latestAnnouncementMs >= earliestSafeMs) {
-      events.push({
-        id: `announce-${nextIndex}`,
-        atMs: latestAnnouncementMs,
-        type: 'announce',
-        exerciseIndex: nextIndex,
-      });
-    }
-    for (let second = 3; second >= 1; second -= 1) {
-      const atMs = nextStartMs - second * 1_000;
-      if (atMs >= exerciseEndMs) {
-        events.push({
-          id: `start-countdown-${nextIndex}-${second}`,
-          atMs,
-          type: 'countdown',
-          exerciseIndex: nextIndex,
-        });
-      }
     }
     events.push({
-      id: `start-${nextIndex}`,
-      atMs: nextStartMs,
+      id: `start-${index}`,
+      atMs: startMs,
       type: 'start',
-      exerciseIndex: nextIndex,
+      exerciseIndex: index,
     });
-    exerciseStartMs = nextStartMs;
-  }
-
-  const eventOrder: Record<ScheduledEvent['type'], number> = {
-    announce: 0,
-    countdown: 1,
-    end: 2,
-    start: 3,
-    complete: 4,
-  };
-  return events.sort(
-    (a, b) =>
-      a.atMs - b.atMs ||
-      eventOrder[a.type] - eventOrder[b.type] ||
-      a.id.localeCompare(b.id),
-  );
-}
-
-function countdownEvents(
-  prefix: string,
-  startMs: number,
-  exerciseIndex: number,
-): ScheduledEvent[] {
-  return [3, 2, 1].map((second, index) => ({
-    id: `${prefix}-countdown-${second}`,
-    atMs: startMs + index * 1_000,
-    type: 'countdown' as const,
-    exerciseIndex,
-  }));
+    const endMs = startMs + routine.exerciseSeconds * 1_000;
+    for (const second of [3, 2, 1]) {
+      events.push({
+        id: `end-countdown-${index}-${second}`,
+        atMs: endMs - second * 1_000,
+        type: 'countdown',
+        exerciseIndex: index,
+      });
+    }
+    // The completion cue replaces the final end cue so tones never overlap.
+    const isLast = index === resolvedExercises.length - 1;
+    events.push({
+      id: isLast ? 'complete' : `end-${index}`,
+      atMs: endMs,
+      type: isLast ? 'complete' : 'end',
+      exerciseIndex: index,
+    });
+    previousEndMs = endMs;
+  });
+  return events;
 }

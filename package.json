@@ -24,7 +24,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "validate:exercises": "node scripts/validate-exercises.ts",
+    "validate:exercises": "node scripts/validate-exercises.ts && node scripts/measure-audio.ts",
     "measure:audio": "node scripts/measure-audio.ts"
   },
   "dependencies": {

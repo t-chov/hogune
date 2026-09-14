@@ -22,7 +22,7 @@ describe('session state machine', () => {
     ).toEqual({ status: 'complete' });
   });
 
-  it.each([1, 3, 5, 120])(
+  it.each([0, 1, 3, 5, 120])(
     'transitions through a %d-second interval',
     (intervalSeconds) => {
       const exercising: SessionState = {
@@ -45,13 +45,13 @@ describe('session state machine', () => {
     },
   );
 
-  it('skips the interval when its duration is zero', () => {
+  it('keeps time for instructions even when the requested rest is zero', () => {
     expect(
       reduceSession(
         { status: 'exercising', exerciseIndex: 0 },
         { type: 'PHASE_FINISHED', exerciseCount: 2, intervalSeconds: 0 },
       ),
-    ).toEqual({ status: 'exercising', exerciseIndex: 1 });
+    ).toEqual({ status: 'interval', exerciseIndex: 0 });
   });
 
   it('pauses and returns through a resume countdown', () => {

@@ -5,12 +5,17 @@ import { decodeRoutineHash, encodeRoutineHash } from './routineCodec';
 const exercise = (id: string): Exercise => ({
   id,
   nameJa: id,
-  imageSrc: `/${id}.webp`,
+  instructionJa: '動作の説明',
+  voiceTextJa: `次は、${id}。動作の説明`,
   voiceSrc: `/${id}.mp3`,
   voiceDurationMs: 1_000,
-  imageAltJa: id,
   enabled: true,
-  review: { poseReviewed: true, reviewedAt: '2026-09-13', reviewer: 'test' },
+  review: {
+    instructionReviewed: true,
+    audioReviewed: true,
+    reviewedAt: '2026-09-13',
+    reviewer: 'test',
+  },
   provenance: { voiceGenerator: 'VOICEVOX', voiceCharacter: '四国めたん' },
 });
 const manifest = [exercise('00A'), exercise('00B'), exercise('FFF')];

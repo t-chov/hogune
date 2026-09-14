@@ -1,23 +1,19 @@
 export type Exercise = {
   id: string;
   nameJa: string;
-  instructionJa?: string;
-  imageSrc: string;
+  instructionJa: string;
+  voiceTextJa: string;
   voiceSrc: string;
   voiceDurationMs: number;
-  imageAltJa: string;
   enabled: boolean;
   deprecated?: boolean;
   review: {
-    poseReviewed: boolean;
+    instructionReviewed: boolean;
+    audioReviewed: boolean;
     reviewedAt: string;
     reviewer: string;
   };
   provenance: {
-    imageGenerator?: string;
-    imageModel?: string;
-    imageModelLicense?: string;
-    imagePromptFile?: string;
     voiceGenerator: 'VOICEVOX';
     voiceCharacter: '四国めたん';
     voiceStyle?: string;
@@ -32,13 +28,13 @@ const placeholder = (
   id,
   nameJa,
   instructionJa,
-  imageSrc: `/exercises/${id}/image.webp`,
+  voiceTextJa: `次は、${nameJa}。${instructionJa}`,
   voiceSrc: `/exercises/${id}/voice.mp3`,
   voiceDurationMs: 0,
-  imageAltJa: `${nameJa}の姿勢を示す画像（準備中）`,
   enabled: false,
   review: {
-    poseReviewed: false,
+    instructionReviewed: false,
+    audioReviewed: false,
     reviewedAt: '',
     reviewer: '',
   },

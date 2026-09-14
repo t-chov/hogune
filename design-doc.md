@@ -1,8 +1,8 @@
 # Hogune Design Document
 
 - Status: Draft for implementation
-- Version: 0.1
-- Updated: 2026-09-13
+- Version: 0.2
+- Updated: 2026-09-14
 - Product name: **Hogune（ホグネ）**
 - Target: Personal use, recent iPhone and Android devices
 
@@ -10,7 +10,7 @@
 
 Hogune is a mobile-first web application for performing a predefined sequence of stretches. A routine is encoded entirely in its URL, so the first release requires no user account, database, API, or server-side application logic.
 
-Each exercise displays a pre-generated instructional image. Pre-generated VOICEVOX audio announces the next exercise. Countdown and transition sounds are synthesized in the browser. Background music is outside the scope of the application.
+Exercise images are not generated, bundled, fetched, or displayed: generated stretch illustrations could not achieve consistent instructional quality. Pre-generated VOICEVOX audio provides each exercise's name and movement instructions. Text instructions and large timers supplement the audio. Countdown and transition sounds are synthesized in the browser. Background music is outside the scope of the application.
 
 The application is delivered as a static Progressive Web App (PWA) on Cloudflare Workers Static Assets.
 
@@ -23,6 +23,7 @@ The application is delivered as a static Progressive Web App (PWA) on Cloudflare
 5. Make a routine URL deterministic and shareable.
 6. Support offline reuse after the routine's assets have been cached.
 7. Make adding exercises a repository-only operation in the first release.
+8. Let users follow every exercise through spoken instructions and clearly distinguishable countdown/start/end cues without continually watching the screen.
 
 ## 3. Non-goals
 
@@ -34,7 +35,7 @@ The first release does not include:
 - Usage analytics, telemetry, advertisements, or social features.
 - Background music.
 - Runtime speech synthesis.
-- Runtime image generation.
+- Exercise images, thumbnails, videos, and image generation (offline or runtime).
 - Medical diagnosis, treatment recommendations, or personalized health advice.
 - Guaranteed execution while the browser is backgrounded or the device is locked.
 
@@ -47,7 +48,7 @@ The first release does not include:
 - A routine contains 1–100 exercises.
 - One exercise may appear multiple times in a routine.
 - Exercise duration is common to every exercise in a routine.
-- Interval duration is common to every transition in a routine.
+- The configured interval is a common minimum rest duration. Each transition may extend it to fit the full spoken instructions and a three-second countdown.
 - Exercise content is manually reviewed before release.
 
 ## 5. Recommended technology stack
@@ -79,12 +80,12 @@ URL decoder ──► validated Routine
                      ▼
 Exercise manifest ─► Session scheduler/state machine
        │                     │
-       ├── image.webp        ├── UI state
-       └── voice.mp3         ├── VOICEVOX playback
+       └── voice.mp3         ├── UI state / instruction text
+                             ├── VOICEVOX playback
                              └── Web Audio cue synthesis
 ```
 
-All application code, the exercise manifest, images, and speech files are compiled or copied into the static deployment.
+All application code, the exercise manifest, and speech files are compiled or copied into the static deployment.
 
 ## 7. Routine URL format
 
@@ -104,7 +105,7 @@ Interpretation:
 
 - Format version: `v1`
 - Exercise duration: 30 seconds
-- Interval duration: 5 seconds
+- Minimum interval duration: 5 seconds (extended when required for spoken instructions and countdown)
 - Exercises: `00A`, `00B`, `00C`
 
 The hash fragment is used so routine data is not sent as part of the HTTP request and static hosting requires no route fallback.
@@ -144,23 +145,19 @@ Store the source manifest at `src/data/exercises.ts` or generate it from a check
 export type Exercise = {
   id: string;                 // Three uppercase hexadecimal characters
   nameJa: string;             // Display name
-  instructionJa?: string;     // Short optional safety/form instruction
-  imageSrc: string;           // Build-relative static asset path
+  instructionJa: string;      // Required movement instructions, also displayed
+  voiceTextJa: string;        // Exact spoken transcript: name and instructions
   voiceSrc: string;           // Pre-generated VOICEVOX MP3 path
   voiceDurationMs: number;    // Measured during asset preparation
-  imageAltJa: string;         // Useful description, not filename repetition
   enabled: boolean;
   deprecated?: boolean;
   review: {
-    poseReviewed: boolean;
+    instructionReviewed: boolean;
+    audioReviewed: boolean;
     reviewedAt: string;       // YYYY-MM-DD
     reviewer: string;
   };
   provenance: {
-    imageGenerator?: string;
-    imageModel?: string;
-    imageModelLicense?: string;
-    imagePromptFile?: string;
     voiceGenerator: "VOICEVOX";
     voiceCharacter: "四国めたん";
     voiceStyle?: string;
@@ -174,10 +171,8 @@ Recommended asset layout:
 public/
   exercises/
     00A/
-      image.webp
       voice.mp3
     00B/
-      image.webp
       voice.mp3
 ```
 
@@ -185,7 +180,9 @@ Build validation must fail when:
 
 - IDs are duplicated or malformed.
 - An enabled exercise references a missing asset.
-- An enabled exercise has not passed pose review.
+- An enabled exercise has not passed instruction and listening review.
+- Required name, movement instructions, or voice transcript is blank.
+- Voice duration is not positive and finite.
 - The measured voice duration differs materially from the manifest value.
 - An asset exceeds the configured size budget.
 
@@ -243,11 +240,11 @@ Mobile browsers do not guarantee reliable timers or audio in the background. For
 
 1. User opens a valid routine URL.
 2. Application validates the recipe and resolves every exercise.
-3. Application loads the first image and all audio needed to start.
+3. Application loads all routine speech files; no exercise images are requested.
 4. The Ready screen shows total duration and exercise count.
 5. User presses the primary Start button.
 6. In that user gesture, initialize/resume `AudioContext` and request Wake Lock.
-7. Play the first exercise announcement.
+7. Play the first exercise's full name and movement instructions; wait for the measured speech duration plus 250 ms.
 8. Run the three-second start countdown.
 9. Play the start cue and enter `exercising`.
 
@@ -255,23 +252,29 @@ Mobile browsers do not guarantee reliable timers or audio in the background. For
 
 For each exercise:
 
-1. Display its image, name, ordinal position, and remaining time.
+1. Display its name, movement instructions, ordinal position, and large remaining time.
 2. During the final three seconds, play one countdown tick per second.
-3. At zero, play the exercise-end cue.
+3. At zero, play the exercise-end cue, or the completion cue for the last exercise (never both together).
 4. If this is the last exercise, enter `complete`.
-5. Otherwise enter the interval and announce the next exercise.
+5. Otherwise enter the interval, wait 500 ms for the end cue to finish, and play the next exercise's full spoken instructions.
 6. During the final three seconds before the next exercise, play the start countdown.
 7. At zero, play the start cue and enter the next exercise.
 
-To avoid speech overlapping countdown cues, schedule the next-exercise announcement to finish at least 250 ms before the start countdown. If the configured interval is too short, the announcement may begin during the preceding exercise, before its end countdown. Use the measured `voiceDurationMs` to calculate the start time.
+Every instruction must finish at least 250 ms before the three-second start countdown. Never omit instructions or play them during the preceding exercise. Use the measured `voiceDurationMs` to calculate all times.
 
-For a zero-second interval, announce the next exercise during the preceding exercise, finish before the end countdown, then transition directly after the end cue. If the preceding exercise is too short to fit the announcement safely, omit that one announcement and show the next exercise text visually; never overlap speech with critical countdown cues.
+- Initial preparation: `voiceDurationMs + 250 + 3000` ms.
+- Actual transition: `max(intervalSeconds * 1000, 500 + nextVoiceDurationMs + 250 + 3000)` ms.
+- A zero-second interval still includes instructions and a countdown; it means no additional rest.
+- Exercise hold durations remain exactly as encoded in the URL.
+- The Ready screen derives total duration from the same schedule, including preparation and extended intervals.
+
+The v1 URL syntax, valid ranges, and IDs remain unchanged. This revision intentionally changes short/zero interval timing to prioritize complete audible instructions; the Ready screen explains that interval values are minimums.
 
 ### 9.6 Pause, resume, and quit
 
 - A large Pause control must be available during the session.
 - Pausing freezes the routine timeline and cancels unsounded scheduled audio.
-- Resuming begins with a new three-second countdown before continuing the remaining phase.
+- Resuming begins with a new three-second countdown before continuing the remaining phase. If paused during speech, replay that instruction from the beginning, then leave 250 ms before the resume countdown; never resume halfway through an instruction.
 - “End session” requires a lightweight confirmation to prevent accidental taps.
 - Browser reload restarts at Ready in v1; mid-session persistence is not required.
 
@@ -281,7 +284,9 @@ For a zero-second interval, announce the next exercise during the preceding exer
 
 - Generate speech offline with the desktop/local VOICEVOX application.
 - Character: 四国めたん.
-- Suggested phrase pattern: `次は、{exercise.nameJa}。`
+- Phrase pattern: `次は、{exercise.nameJa}。{exercise.instructionJa}`; store the exact spoken transcript in `voiceTextJa`.
+- Describe the starting position, movement, side when relevant, and essential form cues clearly enough to follow without an image.
+- Have a human review the instructions and listen to the rendered speech before enabling an exercise.
 - Use one pre-generated MP3 per exercise.
 - Normalize perceived loudness consistently across files.
 - Do not deploy VOICEVOX Engine or synthesize speech at runtime.
@@ -297,7 +302,7 @@ Suggested auditory language:
 - End cue: distinct two-note descending tone.
 - Completion cue: short three-note resolution.
 
-Exact frequencies and envelopes are implementation details, but start and end cues must be unmistakably different. Provide a mute/unmute control and remember the choice in local storage. Visual countdowns must remain sufficient when muted.
+Exact frequencies and envelopes are implementation details, but start and end cues must be unmistakably different. Cues must finish within 400 ms, leaving a gap before speech starts 500 ms after a transition. Provide an explicit sound-check button that plays countdown, start, end, and completion cues before a session. Provide a mute/unmute control and remember the choice in local storage. Visual countdowns must remain sufficient when muted.
 
 ### 10.3 Mobile restrictions
 
@@ -305,17 +310,14 @@ Exact frequencies and envelopes are implementation details, but start and end cu
 - Pre-decode or preload the immediately required sounds before the countdown.
 - Test behavior with the iPhone silent-mode switch and Android media volume. Do not promise audible cues when the operating system or browser suppresses them.
 
-## 11. Image requirements
+## 11. Instruction content requirements
 
-- One instructional image per exercise for v1.
-- Preferred format: WebP; AVIF may be added only with a fallback.
-- Recommended source aspect ratio: 4:5 portrait.
-- Recommended delivered size: approximately 1080 × 1350 or smaller after visual testing.
-- Target file size: under 300 KB per image where practical.
-- The entire person and relevant joint positions must remain visible on a narrow phone display.
-- Do not include text inside generated images.
-- Avoid identifiable real people, trademarks, branded clothing, medical claims, and unsafe environments.
-- A human must check anatomy and exercise form before `poseReviewed` is set to true.
+- Do not create, ship, display, or cache exercise illustrations or thumbnails. PWA application icons remain in scope.
+- Each exercise requires written movement instructions and an exact transcript of the spoken guidance.
+- Instructions must be understandable without visual pose references; do not use phrases such as “as pictured.”
+- A human must review movement clarity and listen for pronunciation, pacing, clipping, and intelligibility before setting `instructionReviewed` and `audioReviewed` to true.
+- Store the review date, reviewer, VOICEVOX provenance, and measured duration with each exercise.
+- Placeholder instructions remain disabled until reviewed audio exists.
 
 ## 12. Mobile UI specification
 
@@ -336,8 +338,8 @@ Display:
 - Exercise count.
 - Per-exercise and interval durations.
 - Estimated total duration.
-- Ordered exercise list with thumbnails.
-- Audio status and mute control.
+- Ordered exercise names and text instructions; no thumbnails.
+- Audio status, sound-check button, and mute control.
 - Offline asset readiness/progress.
 - Large Start button fixed near the bottom safe area.
 
@@ -345,7 +347,7 @@ Display:
 
 Display:
 
-- Exercise image occupying most available space.
+- Large countdown and text instructions occupying the main content area; no exercise image.
 - Exercise name.
 - Large remaining-seconds display.
 - Progress such as `2 / 8`.
@@ -361,8 +363,8 @@ Display:
 
 - `休憩` label.
 - Large remaining-seconds display.
-- Next exercise name and image.
-- Short optional instruction.
+- Next exercise name and full text instruction.
+- Indication that spoken instructions and preparation are included in the displayed remaining time.
 - Pause control.
 
 ### 12.5 Completion screen
@@ -394,8 +396,8 @@ Do not store health information, session history, the current routine, or identi
 
 - Provide a web app manifest, icons, theme color, and standalone display mode.
 - Precache the application shell, exercise manifest, PWA icons, and local font assets if any.
-- Runtime-cache exercise images and speech using content-hashed URLs.
-- Before enabling Start, prefetch all image and speech assets for the current routine.
+- Runtime-cache exercise speech using versioned/content-hashed MP3 URLs; never reuse an audio URL for changed content. The initial prototype uses reserved voice paths only for disabled entries.
+- Before enabling Start, prefetch all speech assets for the current routine.
 - Show progress while fetching.
 - If fetching fails, list the unavailable assets and offer Retry.
 - Once all routine assets are cached, show `オフラインで利用できます`.
@@ -405,7 +407,7 @@ Do not store health information, session history, the current routine, or identi
 ## 15. Accessibility and motion
 
 - Use semantic buttons, headings, and live regions conservatively.
-- Provide Japanese alternative text for every exercise image.
+- Display Japanese movement instructions and provide access to the exact spoken transcript; sound must not be the only source of instructions.
 - Keep timer announcements from screen readers from firing every second; announce major transitions instead.
 - Honor `prefers-reduced-motion`.
 - Animations must not be necessary to understand progress.
@@ -443,7 +445,7 @@ Reference terms:
 Maintain `THIRD_PARTY_NOTICES.md` with:
 
 - VOICEVOX and 四国めたん credit and links.
-- Image model/checkpoint name, version, source, and license.
+- VOICEVOX generation version, voice style, exact transcript, and audio review records.
 - Any third-party fonts, icons, or libraries requiring attribution.
 
 Maintain asset-generation records under a repository directory such as `assets-source/metadata/`. Generated source files need not be shipped to production.
@@ -508,7 +510,8 @@ Cover at minimum:
 - Intervals of 0, 1, 3, 5, and 120 seconds.
 - Exercise durations of 5 and 600 seconds.
 - Pause/resume without time loss or duplicate audio.
-- Announcement scheduling around countdowns.
+- Complete instructions before every exercise, including zero/short intervals and long speech.
+- No speech/cue overlap, initial preparation duration, extended intervals, and a single completion cue.
 - Completion reached exactly once.
 - Corrupted local-storage fallback.
 
@@ -544,11 +547,10 @@ Before release, verify on physical iPhone and Android devices:
 ## 20. Performance budgets
 
 - Initial application shell, excluding exercise media: target under 250 KB compressed JavaScript.
-- Exercise image: target under 300 KB each.
 - Speech file: target under 150 KB each where intelligibility permits.
 - Largest Contentful Paint on a normal modern mobile connection: target under 2.5 seconds for the Ready screen.
 - Start must remain disabled until the first phase can run without a network stall.
-- Lazy-load thumbnails and non-current routine assets.
+- Do not load speech for exercises outside the current routine.
 
 ## 21. Error handling
 
@@ -590,14 +592,16 @@ The application intentionally has no user analytics. Operational checks are limi
 Adding an exercise should require only:
 
 1. Reserve a new three-digit ID.
-2. Add and review the image.
-3. Generate and normalize the VOICEVOX file.
+2. Write and review the movement instructions and spoken transcript.
+3. Generate, normalize, and listen to the VOICEVOX file.
 4. Record provenance and licenses.
 5. Add the manifest entry.
 6. Run validation and tests.
 7. Merge and deploy.
 
 ## 24. Implementation phases
+
+Current implementation (2026-09-14): Phase 1 domain prototype, updated for audio-led instructions, plus an oscillator-based sound-check UI. All three reserved exercises remain disabled. Production VOICEVOX files, session playback controls, and physical-device audio verification are still pending; the sound check does not imply these are complete.
 
 ### Phase 1: Domain prototype
 
@@ -615,7 +619,7 @@ Adding an exercise should require only:
 
 ### Phase 3: Assets and PWA
 
-- Add reviewed images and VOICEVOX audio.
+- Add reviewed movement instructions and VOICEVOX audio; record instruction and listening reviews.
 - Add asset validation scripts.
 - Add service worker, caching, and install manifest.
 - Add credits and notices.
@@ -634,9 +638,9 @@ The release is complete when all of the following are true:
 1. A canonical URL such as `#/v1/30/5/00A00B00C` loads the correct routine without a backend request.
 2. Invalid or unknown recipes show an actionable error and cannot start.
 3. A user can start the routine with one tap after assets are ready.
-4. Every exercise displays its reviewed image, Japanese name, remaining time, and position in the routine.
+4. No exercise image or thumbnail is generated, loaded, cached, or displayed. Every exercise displays its Japanese name, written instructions, remaining time, and position in the routine.
 5. Start and end countdowns are audible and visually distinct.
-6. The next exercise is announced with pre-generated 四国めたん audio when scheduling permits without obscuring critical cues.
+6. Every exercise receives complete pre-generated 四国めたん instructions before its start countdown. Short/zero intervals extend as needed; speech and critical cues never overlap.
 7. Pause/resume does not lose time, skip a phase, or duplicate audio.
 8. Hiding the page pauses the session; returning offers Resume.
 9. The current routine works offline after its assets have been cached.
@@ -655,7 +659,6 @@ These do not block v1 implementation:
 - A future in-app routine builder.
 - Optional local-only favorites or history.
 - Multiple durations within one routine.
-- Multiple images or video per exercise.
 - A migration format for `v2` URLs.
 
 When a deferred decision is implemented, preserve decoding support for every previously published `v1` URL.
